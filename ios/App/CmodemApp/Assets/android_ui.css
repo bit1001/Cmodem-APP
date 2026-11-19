@@ -1,0 +1,519 @@
+/* Android viewport is inside native system-bar/IME padding. Only the document
+   scrolls; modal contents retain their own upstream scroll containers. */
+/* Upstream applies overscroll-behavior:none to every element. Its clipped
+   .ios-list cards then trap gestures rather than chaining to the document. */
+* { overscroll-behavior:auto; }
+html { min-height:100%; overflow-y:auto; scroll-behavior:auto; overscroll-behavior:none; }
+body { min-height:100vh; overflow:visible; padding-bottom:112px; }
+.page { overflow:visible; }
+/* SMS is a fixed full-page surface. Keep it opaque so the previous dashboard
+   cannot show through below it during a tab switch or while the list loads. */
+#page-sms,
+body.has-wallpaper #page-sms { background:var(--ios-bg) !important; }
+/* A fixed tab must not inherit the document's old vertical offset while it
+   changes from display:none to flex. */
+#page-sms { position:fixed; inset:0; }
+/* Cover the first incoming frame until the fixed SMS surface has settled. */
+html.__sms-transition body::after {
+  content:''; position:fixed; inset:0; z-index:500; pointer-events:none;
+  background:var(--ios-bg);
+}
+.lock-modal-content, .diag-list { overscroll-behavior:contain; }
+.lan-profile-actions { display:flex; gap:8px; margin-top:8px; }
+.lan-profile-actions button {
+  flex:1; min-width:0; min-height:36px;
+  border:1px solid var(--ios-border); border-radius:10px;
+  background:var(--ios-bg); color:var(--ios-primary);
+  font-size:13px; font-weight:600; cursor:pointer;
+}
+.lan-profile-actions button:disabled { opacity:.5; }
+.page-title { line-height:1.3; }
+/* Long firmware/model strings must shrink inside the device information rows. */
+body[data-lan-device=air6] #page-settings .ios-row { display:grid; grid-template-columns:minmax(112px,40%) minmax(0,1fr); gap:10px; min-width:0; }
+body[data-lan-device=air6] #page-settings .row-left { min-width:0; }
+body[data-lan-device=air6] #page-settings .ios-row[onclick="openClearCacheDialog()"] { display:flex; justify-content:center; text-align:center; }
+body[data-lan-device=air6] #page-settings .ios-row[onclick="openClearCacheDialog()"] > span { width:100%; text-align:center; }
+body[data-lan-device=air6] #page-settings .row-title { min-width:0; overflow-wrap:anywhere; }
+body[data-lan-device=air6] #page-settings .row-right { min-width:0; max-width:none; width:100%; justify-content:flex-end; text-align:right; }
+body[data-lan-device=air6] #page-settings .row-right > span { min-width:0; white-space:normal; overflow-wrap:anywhere; word-break:break-word; font-variant-numeric:tabular-nums; }
+body[data-lan-device=air6] #page-settings .row-right .chevron, body[data-lan-device=air6] #page-settings .row-right .eye-btn { flex:0 0 auto; }
+body[data-lan-device=air6] #page-settings #setSwVersion { flex:1 1 auto; min-width:0; white-space:nowrap!important; overflow:hidden; text-overflow:ellipsis; word-break:normal; }
+@media(max-width:360px) {
+  body[data-lan-device=air6] #page-settings .ios-row { grid-template-columns:minmax(102px,42%) minmax(0,1fr); padding-left:12px; padding-right:12px; gap:8px; }
+  body[data-lan-device=air6] #page-settings .row-left { gap:8px; }
+}
+.info-row { min-width:0; gap:8px; }
+.info-row-label { flex:0 0 auto; }
+.info-row-val { min-width:0; }
+#swVersion, #deviceModel, #deviceName, #firmwareBody { white-space:normal; overflow-wrap:anywhere; word-break:break-word; }
+.tabbar { bottom:12px; width:min(360px,calc(100% - 32px)); gap:4px; padding:6px 12px; }
+.tabbar .tab-btn { flex:1 1 0; min-width:0; padding:4px 6px; white-space:nowrap; }
+
+/* Flex's default min-width:auto lets the two control columns push each other
+   out. Keep status text on one line and let descriptions wrap on the left. */
+#page-control .ios-row { gap:10px; }
+#page-control .row-left { flex:1 1 0; min-width:0; }
+#page-control .row-title { min-width:0; }
+#page-control .row-sub-title { overflow-wrap:anywhere; }
+#page-control .row-right {
+  flex:0 1 auto; min-width:0; max-width:50%;
+  justify-content:flex-end; text-align:right;
+}
+#page-control .row-right > span {
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+#page-control .row-right .chevron, #page-control .ios-switch { flex-shrink:0; }
+/* Keep the status in the row layout so the subtitle wraps in the remaining
+   column instead of painting underneath an absolutely positioned value. */
+#page-control #netSettingRow { display:grid; grid-template-columns:minmax(0,1fr) minmax(88px,40%); }
+#page-control #netSettingRow .row-right {
+  position:static; transform:none; justify-self:stretch; margin-left:0;
+  max-width:none; min-width:0; gap:6px;
+}
+#page-control #netSettingRow .row-left { padding-right:0; }
+#page-control #netSettingRow #netSettingText {
+  min-width:0; white-space:normal; overflow-wrap:anywhere;
+  text-overflow:clip; text-align:right; font-size:14px;
+}
+@media(max-width:360px) {
+  #page-control .ios-row { padding-left:12px; padding-right:12px; gap:8px; }
+  #page-control .row-left { gap:8px; }
+  #page-control #netSettingRow #netSettingText { font-size:12px; }
+}
+
+/* Keep the imported rainbow-card preset legible over Android's dark palette. */
+html[data-theme=dark] body.card-header-pro #caRowCard,
+html[data-theme=dark] body.card-header-pro #gaugeCard,
+html[data-theme=dark] body.card-header-pro #trafficCard,
+html[data-theme=dark] body[data-lan-device=air6].card-header-pro #lanRuntimeCard,
+html[data-theme=dark] body.card-header-pro .ambr-qci-card,
+html[data-theme=dark] body.card-header-pro .header-card,
+html[data-theme=dark] body.card-header-pro .page .cell-card,
+html[data-theme=dark] body.card-header-pro .page .ios-list {
+  background:
+    radial-gradient(70% 92% at var(--g1p,4% -6%),rgba(var(--g1rgb,0,199,190),.25),transparent 62%),
+    radial-gradient(90% 104% at var(--g2p,96% -10%),rgba(var(--g2rgb,10,132,255),.27),transparent 66%),
+    radial-gradient(70% 84% at var(--g3p,82% 112%),rgba(var(--g3rgb,123,97,255),.23),transparent 64%),
+    radial-gradient(52% 62% at var(--g4p,20% 112%),rgba(var(--g4rgb,255,159,0),.18),transparent 68%),
+    linear-gradient(145deg,#1a232a,#1a2028 52%,#24212b) !important;
+  border-color:rgba(184,210,238,.18) !important;
+  box-shadow:0 7px 22px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035) !important;
+}
+
+/* Keep carrier names compact and single-line in the colorful header card. */
+body.card-header-pro .hc-prow { align-items:center; }
+body.card-header-pro .hc-op {
+  flex:1 1 auto; max-width:72%; min-width:0;
+  font-size:17px; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+/* Air6 trades some device-image width for a complete single-line carrier name. */
+body[data-lan-device=air6].card-header-pro .hc-img {
+  width:68px!important; height:86px!important; flex:0 0 68px!important;
+  object-fit:contain;
+}
+body[data-lan-device=air6].card-header-pro .hc-pro-wrap { min-width:0; }
+body[data-lan-device=air6].card-header-pro .hc-prow { gap:5px; }
+body[data-lan-device=air6].card-header-pro .hc-op {
+  flex:0 0 auto; max-width:none; min-width:0;
+  white-space:nowrap; overflow:visible; text-overflow:clip;
+}
+body[data-lan-device=air6].card-header-pro #hcArrow {
+  background:transparent!important; border-radius:0!important; box-shadow:none!important;
+}
+/* Air6 puts total DL/UL bandwidth before the CC count, outside compact rows. */
+body[data-lan-device="air6"].card-header-pro #caRowSummary {
+  min-width:0; max-width:70%; white-space:normal; overflow-wrap:anywhere;
+  text-align:right; font-size:11px; line-height:1.5;
+}
+body[data-lan-device="air6"] .air6-carrier-row {
+  display:flex; flex-wrap:wrap; gap:8px; min-width:0; align-items:center;
+}
+body[data-lan-device="air6"] .air6-carrier-row .ca-kv { white-space:nowrap; }
+body[data-lan-device="air6"] .cell-card.air6-card { display:block; }
+#totalTraffic { font-size:clamp(22px,7vw,28px); line-height:1.2; white-space:nowrap; }
+body[data-lan-device="air6"] #caCard .ca-header { gap:10px; align-items:center; }
+body[data-lan-device="air6"] #caCard .ca-title { flex-shrink:0; }
+body[data-lan-device="air6"] #ca { min-width:0; text-align:right; white-space:normal; font-size:11px; line-height:1.5; }
+.air6-plain-carrier { display:block; min-width:0; }
+.air6-plain-carrier-head { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; margin-bottom:8px; }
+.air6-plain-carrier-head .air6-plain-bandwidth { margin:0 0 0 auto; justify-content:flex-end; gap:4px 10px; }
+.air6-plain-carrier-head .carrier-tag { font-size:14px; font-weight:700; }
+.air6-plain-bandwidth,.air6-plain-carrier-meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px 12px; font-size:12px; line-height:1.5; color:var(--ios-text-secondary); }
+.air6-plain-bandwidth { margin-bottom:10px; }
+.air6-plain-bandwidth>span,.air6-plain-carrier-meta>span { white-space:nowrap; }
+.air6-plain-carrier .metric-grid { margin-bottom:10px; }
+.air6-plain-carrier .metric-val,.air6-plain-carrier .metric-label { display:block; }
+#bandTag,#hcBandChip { display:none!important; }
+/* Keep the plain header on one line; JS reduces this scale only when needed. */
+body:not(.card-header-pro) .header-card { gap:calc(8px * var(--lan-header-scale,1)); }
+body:not(.card-header-pro) .header-left {
+  flex:1 1 auto; min-width:0; overflow:hidden;
+  gap:calc(10px * var(--lan-header-scale,1));
+}
+body:not(.card-header-pro) .operator-title {
+  flex:0 0 auto; white-space:nowrap; line-height:1.25;
+  font-size:calc(17px * var(--lan-header-scale,1));
+}
+body:not(.card-header-pro) .network-tags { flex:0 0 auto; flex-wrap:nowrap; gap:calc(4px * var(--lan-header-scale,1)); }
+body:not(.card-header-pro) .network-tags .tag { white-space:nowrap; font-size:calc(13px * var(--lan-header-scale,1)); padding-left:calc(8px * var(--lan-header-scale,1)); padding-right:calc(8px * var(--lan-header-scale,1)); }
+body:not(.card-header-pro) #devCountWrap { flex:0 0 auto; gap:calc(10px * var(--lan-header-scale,1))!important; }
+body:not(.card-header-pro) #modemTempVal { font-size:calc(12px * var(--lan-header-scale,1))!important; }
+body:not(.card-header-pro) .header-card[data-header-overflow] .operator-title { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+#mode,body.card-header-pro #hcModeChip {
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--ios-primary)!important; color:#fff!important;
+  border:0; border-radius:8px; font-weight:800; line-height:1.25;
+  white-space:nowrap; padding-top:5px; padding-bottom:5px;
+}
+.lan-runtime-card { height:74px; padding:8px 12px; box-sizing:border-box; }
+.lan-runtime-grid { display:grid; width:100%; height:100%; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.lan-runtime-grid>div { min-width:0; text-align:center; padding:7px 4px; border-radius:9px; background:var(--ios-bg); }
+.lan-runtime-grid span { display:block; color:var(--ios-text-secondary); font-size:10px; margin-bottom:3px; }
+.lan-runtime-grid strong { display:block; color:var(--ios-text); font-size:13px; line-height:1.25; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+#lanRuntimeUptime { white-space:nowrap; overflow-wrap:normal; }
+body[data-lan-device=air6] .ambr-qci-card .aq-item { min-width:0; align-items:center; justify-content:center; text-align:center; }
+body[data-lan-device=air6].card-header-pro #lanRuntimeCard {
+  background:
+    radial-gradient(70% 92% at 4% -6%,rgba(0,199,190,.24),transparent 62%),
+    radial-gradient(90% 104% at 96% -10%,rgba(10,132,255,.27),transparent 66%),
+    radial-gradient(70% 84% at 82% 112%,rgba(123,97,255,.22),transparent 64%),
+    radial-gradient(52% 62% at 20% 112%,rgba(255,159,0,.17),transparent 68%),
+    linear-gradient(150deg,#f4f9ff,#e4eefd 56%,#edf2fe)!important;
+  border-color:#d8e4f5!important;
+  box-shadow:var(--ios-shadow)!important;
+}
+body[data-lan-device=air6].card-header-pro .lan-runtime-grid>div {
+  background:rgba(255,255,255,.52); border:1px solid rgba(255,255,255,.42);
+}
+html[data-theme=dark] body[data-lan-device=air6].card-header-pro .lan-runtime-grid>div {
+  background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.06);
+}
+.air6-system-row .row-main-title { font-size:14px; font-weight:500; }
+body[data-lan-device=air6] .air6-system-row .row-right,
+body[data-lan-device=air6] .air6-system-row .row-right>span { color:var(--ios-text); font-size:14px; font-weight:400; }
+@media(max-width:340px) { .lan-runtime-grid { grid-template-columns:1fr; } .lan-runtime-grid>div { display:flex; align-items:center; justify-content:space-between; text-align:left; } .lan-runtime-grid span { margin:0; } }
+.air6-ota-card { max-width:360px; }
+.air6-ota-entry { display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px; margin:12px 0; padding:16px; border:1px solid var(--ios-primary); border-radius:16px; background:var(--ios-primary-soft); color:var(--ios-primary); text-align:left; cursor:pointer; }
+.air6-ota-entry strong,.air6-ota-entry small { display:block; }
+.air6-ota-entry strong { font-size:15px; font-weight:600; margin-bottom:4px; }
+.air6-ota-entry small { font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.air6-ota-entry>b { flex:none; font-size:13px; }
+.air6-ota-entry.has-update { border-color:var(--ios-primary); }
+#air6OtaMessage { margin:10px 0; padding:8px 10px; border-radius:8px; border:1px solid var(--ios-border); background:var(--ios-primary-soft); color:var(--ios-primary); font-size:13px; font-weight:500; line-height:1.5; white-space:pre-line; }
+#air6OtaMessage.has-update { border-color:var(--ios-primary); color:var(--ios-primary); }
+#air6OtaMessage.is-error { border-color:var(--ios-danger); color:var(--ios-danger); }
+.air6-ota-actions #air6OtaCheck { grid-column:1/-1; min-height:48px; background:var(--ios-primary); color:#fff; font-size:16px; }
+.air6-ota-actions #air6OtaUpgrade { grid-column:auto; }
+.air6-ota-actions button:disabled { opacity:.45; cursor:default; }
+.lan-sms-refresh-option { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 2px; color:var(--ios-text); }
+.lan-sms-refresh-option strong,.lan-sms-refresh-option small { display:block; }
+.lan-sms-refresh-option small { font-size:12px; color:var(--ios-text-secondary); margin-top:5px; }
+.lan-sms-refresh-option input { width:22px; height:22px; accent-color:var(--ios-primary); }
+.air6-ota-body { padding:4px 16px 16px; overflow-y:auto; }
+.air6-ota-row { display:grid; grid-template-columns:90px minmax(0,1fr); gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--ios-border); font-size:13px; }
+.air6-ota-row span { color:var(--ios-text-secondary); }
+.air6-ota-row b { min-width:0; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.air6-ota-history { display:grid!important; grid-template-columns:90px minmax(0,1fr); gap:10px; align-items:center; margin:9px 0!important; }
+.air6-ota-history select { min-width:0; width:100%; }
+.air6-ota-notes-title { display:flex; align-items:center; gap:7px; margin:12px 0 7px; color:var(--ios-text); font-size:13px; font-weight:700; }
+.air6-ota-notes-title::before { content:''; width:3px; height:14px; border-radius:2px; background:var(--ios-primary); }
+#air6OtaNotes { width:100%; min-height:84px; max-height:180px; box-sizing:border-box; overflow:auto; margin:0 0 6px; padding:10px 12px; border:1px solid rgba(47,107,255,.14); border-radius:10px; background:rgba(47,107,255,.055); color:var(--ios-text); white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.55; }
+html[data-theme=dark] #air6OtaNotes { border-color:rgba(111,152,255,.18); background:rgba(111,152,255,.08); }
+#air6OtaNotes.expanded { max-height:min(55vh,420px); }
+.air6-ota-notes-toggle { display:none; width:100%; margin:0 0 10px; padding:6px 8px!important; border:0; background:transparent!important; color:var(--ios-primary)!important; font-size:12px; font-weight:600; }
+.air6-ota-row-badge { flex:none; min-width:18px; height:18px; align-items:center; justify-content:center; padding:0 5px!important; border-radius:9px!important; background:var(--ios-danger)!important; color:#fff!important; font-size:10px!important; font-weight:700!important; }
+.air6-ota-version-row .row-title { flex-direction:row; align-items:center; gap:6px; }
+#setSwVersion { min-width:0; white-space:nowrap; }
+.air6-ota-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.air6-ota-actions button:last-child { grid-column:1/-1; }
+.air6-ota-actions button,.air6-ota-confirm button { min-height:40px; border:0; border-radius:10px; background:var(--ios-bg); color:var(--ios-text); font-weight:600; }
+.air6-ota-actions .air6-primary,.air6-ota-confirm .air6-primary { background:var(--ios-primary); color:#fff; }
+.air6-ota-confirm { max-width:330px; padding:18px 16px; }
+.air6-ota-confirm>strong { display:block; text-align:center; font-size:17px; margin-bottom:10px; }
+.air6-ota-confirm>p { color:var(--ios-text-secondary); font-size:13px; line-height:1.6; margin:10px 0; }
+.air6-ota-confirm>label { display:flex; align-items:center; gap:8px; font-size:14px; }
+.air6-ota-confirm input { width:18px; height:18px; }
+.air6-ota-warning { color:var(--ios-warning)!important; }
+.air6-add-cell { margin-top:10px; padding:7px 12px; border:0; border-radius:999px; color:var(--ios-primary); background:var(--ios-primary-soft); font-size:12px; }
+#air6CellDraftRows .air6-actions { align-items:center; }
+#air6CellDraftRows .air6-actions>span { flex:1; min-width:0; overflow-wrap:anywhere; font-size:12px; }
+#air6CellDraftRows .air6-actions>button { flex:none; }
+.air6-cfun-segments { display:flex; margin-top:12px; border:1px solid var(--ios-border); border-radius:10px; overflow:hidden; }
+#air6Control .air6-cfun-segments button { flex:1; min-width:0; padding:12px 3px; border-radius:0; font-size:12px; }
+#air6Control .air6-cfun-segments button.selected { background:var(--ios-primary); color:white; font-weight:700; }
+body.card-header-pro #hcModeChip { font-size:14px; padding:6px 10px; flex:none; }
+@media(max-width:360px) {
+  body.card-header-pro .hc-prow { gap:4px; }
+  body.card-header-pro .hc-prow-spacer { display:block; flex:1 1 auto; min-width:4px; }
+  body.card-header-pro .hc-op { font-size:clamp(12px,3.6vw,14px); }
+  body.card-header-pro .hc-prow>svg { width:18px!important; height:18px!important; }
+  body.card-header-pro #hcTemp2 svg { width:14px; height:14px; }
+  body.card-header-pro #hcTempTxt2 { font-size:10px!important; }
+  body.card-header-pro #hcBars { gap:1px; margin-left:0; }
+}
+
+/* Air6 lock dialog: compact mobile rows, separate device state and draft. */
+#air6Control .air6-modal-head,#air6Control .air6-modal-foot { flex-shrink:0; }
+#air6Control .air6-cell-heading { font-size:14px; margin:14px 0 8px; }
+#air6CellDraftCount { font-size:12px; font-weight:400; color:var(--ios-text-secondary); }
+#air6CellDraftRows { margin-top:8px; padding:8px 10px; border:1px dashed var(--ios-border); border-radius:10px; font-size:12px; color:var(--ios-text-secondary); }
+#air6CellDraftRows .air6-actions { margin:4px 0; gap:8px; }
+#air6Control #air6CellDraftRows button { padding:5px 10px; font-size:12px; }
+#air6Control .air6-cell-help { margin:6px 0; font-size:11px; line-height:1.45; }
+#air6DeviceCellDetails { font-size:12px; color:var(--ios-text-secondary); margin:8px 0; }
+#air6DeviceCellDetails summary { padding:6px 0; cursor:pointer; }
+#air6DeviceCellRows p { margin:6px 0; }
+#air6LockNeighbors { display:grid; gap:8px; }
+#air6LockNeighbors .air6-lock-cell { padding:10px; border:1px solid var(--ios-border); border-radius:12px; background:var(--ios-bg); min-width:0; }
+#air6LockNeighbors .air6-lock-cell-head { display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:12px; }
+#air6LockNeighbors .air6-lock-cell-head strong { min-width:0; overflow-wrap:anywhere; }
+#air6LockNeighbors .air6-cell-identity { font-size:12px; line-height:1.4; margin:4px 0 8px; color:var(--ios-text-secondary); }
+#air6LockNeighbors .air6-cell-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+#air6LockNeighbors .air6-cell-metrics span { display:block; font-size:10px; color:var(--ios-text-secondary); margin-bottom:3px; }
+#air6LockNeighbors .air6-cell-metrics strong { display:block; font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+#air6Control .air6-cell-buttons { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+#air6Control .air6-cell-buttons button { flex:none; padding:6px 14px; min-height:32px; font-size:12px; background:var(--ios-card-bg); }
+.air6-cell-quality { flex:none; padding:2px 7px; border-radius:6px; font-size:11px; }
+.air6-cell-quality.good { color:var(--ios-success); background:rgba(52,199,89,.12); }
+.air6-cell-quality.fair { color:#b85c00; background:rgba(255,159,10,.12); }
+.air6-cell-quality.poor { color:var(--ios-danger); background:rgba(255,59,48,.12); }
+.air6-cell-quality.unknown { color:var(--ios-text-secondary); }
+
+html[data-theme=dark] .air6-cell-quality.fair { color:#ffbf69; }
+
+.lan-profile-name{display:block;margin:12px 0;font-size:13px;color:var(--ios-text-secondary)}#localProfileName{box-sizing:border-box;width:100%;padding:11px;margin-top:8px;border:1px solid var(--ios-border);border-radius:10px;background:var(--ios-bg);color:var(--ios-text);font-size:15px}
+
+#air6Clients .air6-client-row { padding:12px 2px; border-top:.5px solid var(--ios-border); }
+#air6Clients .air6-client-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+#air6Clients .air6-client-head strong { font-size:15px; font-weight:700; min-width:0; overflow-wrap:anywhere; color:var(--ios-text); }
+#air6Clients .air6-client-head>span { font-size:11px; color:var(--ios-text-secondary); flex:none; }
+#air6Clients .air6-client-detail { display:grid; grid-template-columns:34px minmax(0,1fr); gap:8px; margin-top:5px; font-size:11px; line-height:1.5; color:var(--ios-text-secondary); }
+#air6Clients .air6-client-detail>span:last-child { overflow-wrap:anywhere; white-space:pre-line; user-select:text; }
+
+body[data-lan-device="air6"] #netSettingText { white-space:nowrap!important; }
+
+/* SMS conversation list and full-screen chat (sms_cards.js). */
+.sms-view-tabs { display:flex; gap:4px; margin:0 16px 8px; padding:3px; border-radius:9px; background:rgba(118,118,128,.12); flex-shrink:0; }
+.sms-view-tabs button { flex:1; min-width:0; height:30px; border:0; border-radius:7px; background:transparent; color:var(--ios-text-secondary); font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sms-view-tabs button.active { background:var(--ios-card-bg); color:var(--ios-text); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+/* Every SMS list row is a bordered box: message cards (全部/收件/发件) and
+   upstream contact rows (联系人) alike. Upstream rows set inline padding and a
+   bottom divider, and the wallpaper theme styles .sms-row with !important, so
+   these rules use !important and also cover body.has-wallpaper. */
+#smsListContainer .sms-row,
+body.has-wallpaper #smsListContainer .sms-row { margin:0 0 10px!important; padding:12px 14px!important; border:1px solid rgba(60,60,67,.18)!important; border-radius:12px!important; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+body:not(.has-wallpaper) #smsListContainer .sms-row { background:var(--ios-card-bg); }
+#smsListContainer .sms-row:active { border-color:rgba(60,60,67,.32)!important; }
+#smsListContainer .sms-row.unread,
+body.has-wallpaper #smsListContainer .sms-row.unread { border-left:3px solid var(--ios-primary)!important; padding-left:12px!important; }
+#smsListContainer .sms-row.picked { background:var(--ios-primary-soft)!important; border-color:var(--ios-primary)!important; }
+html[data-theme=dark] #smsListContainer .sms-row,
+html[data-theme=dark] body.has-wallpaper #smsListContainer .sms-row { border-color:rgba(255,255,255,.14)!important; box-shadow:none; }
+html[data-theme=dark] #smsListContainer .sms-row.unread { border-left-color:var(--ios-primary)!important; }
+html[data-theme=dark] #smsListContainer .sms-row.picked { border-color:var(--ios-primary)!important; }
+.sms-card { display:block!important; cursor:pointer; }
+.sms-card-head { display:flex; align-items:center; gap:6px; min-width:0; }
+.sms-card-check { display:flex; flex-shrink:0; }
+.sms-card-dir { flex-shrink:0; width:20px; height:20px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:rgba(52,199,89,.16); color:#1f9d47; }
+.sms-card-dir.send, .sms-chat-row.send .sms-card-dir { background:var(--ios-primary-soft); color:var(--ios-primary); }
+.sms-card-num { flex:1; min-width:0; font-size:14px; font-weight:600; color:var(--ios-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sms-card-dot { flex-shrink:0; width:8px; height:8px; border-radius:50%; background:var(--ios-danger); }
+.sms-card-time { flex-shrink:0; font-size:11px; color:var(--ios-text-secondary); font-variant-numeric:tabular-nums; }
+.sms-card-text { margin-top:6px; font-size:14px; line-height:1.55; color:var(--ios-text); white-space:pre-wrap; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; -webkit-user-select:text; user-select:text; }
+.sms-card-acts { display:flex; justify-content:flex-end; gap:4px; margin-top:6px; }
+.sms-card-act { width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:var(--ios-text-secondary); display:inline-flex; align-items:center; justify-content:center; }
+.sms-card-act:active { background:rgba(118,118,128,.16); }
+.sms-thread-count { flex-shrink:0; font-size:11px; color:var(--ios-text-tertiary); }
+.sms-thread-chevron { flex-shrink:0; width:12px; overflow:hidden; text-align:center; color:var(--ios-text-tertiary); font-size:20px; line-height:20px; }
+.sms-thread-preview { display:flex; align-items:center; gap:8px; margin-top:8px; min-width:0; }
+.sms-thread-preview-text { min-width:0; flex:1; color:var(--ios-text-secondary); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sms-chat-day { align-self:center; margin:10px 0; color:var(--ios-text-tertiary); font-size:11px; }
+.sms-chat-row { width:100%; display:flex; align-items:flex-end; gap:8px; margin:3px 0 9px; }
+.sms-chat-row.recv { justify-content:flex-start; }
+.sms-chat-row.send { justify-content:flex-end; }
+.sms-chat-row.picked { opacity:.78; }
+.sms-chat-check { display:flex; flex:0 0 auto; padding-bottom:24px; }
+.sms-chat-stack { display:flex; flex-direction:column; min-width:0; max-width:82%; }
+.sms-chat-row.send .sms-chat-stack { align-items:flex-end; }
+.sms-chat-row.recv .sms-chat-stack { align-items:flex-start; }
+.sms-chat-meta { display:flex; align-items:center; gap:7px; margin:0 3px 4px; color:var(--ios-text-tertiary); font-size:10px; font-variant-numeric:tabular-nums; }
+.sms-chat-row.send .sms-chat-meta { flex-direction:row-reverse; }
+.sms-chat-bubble { max-width:100%; padding:10px 13px; border-radius:16px; font-size:14px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
+.sms-chat-row.recv .sms-chat-bubble { color:var(--ios-text); background:rgba(52,199,89,.13); border:1px solid rgba(52,199,89,.22); border-bottom-left-radius:4px; }
+.sms-chat-row.send .sms-chat-bubble { color:#fff; background:var(--ios-primary); border-bottom-right-radius:4px; }
+.sms-chat-message-actions { display:flex; gap:2px; margin-top:2px; }
+.sms-chat-row.recv .sms-chat-message-actions { align-self:flex-start; }
+.sms-chat-row.send .sms-chat-message-actions { align-self:flex-end; }
+.sms-chat-message-actions .sms-card-act { width:29px; height:29px; }
+.sms-chat-empty { text-align:center; padding:60px 20px; color:var(--ios-text-secondary); font-size:13px; }
+.sms-empty-view { text-align:center; padding:48px 20px; color:var(--ios-text-secondary); font-size:13px; }
+@media (max-width:420px) {
+  .sms-thread-card > .sms-card-head { flex-wrap:wrap; }
+  .sms-thread-card > .sms-card-head > .sms-card-time { order:10; flex-basis:100%; padding-left:0; }
+}
+html[data-theme=dark] .sms-view-tabs { background:rgba(118,118,128,.24); }
+html[data-theme=dark] .sms-card-dir { background:rgba(52,211,153,.18); color:#6ee7b7; }
+html[data-theme=dark] .sms-card-dir.send, html[data-theme=dark] .sms-chat-row.send .sms-card-dir { background:rgba(111,152,255,.18); color:#9ab8ff; }
+html[data-theme=dark] .sms-chat-row.recv .sms-chat-bubble { background:rgba(52,211,153,.14); border-color:rgba(52,211,153,.23); }
+
+body[data-lan-device=air6].card-header-pro #smsListContainer .sms-row,
+body[data-lan-device=air6].card-header-pro #smsChat {
+  background:
+    radial-gradient(75% 90% at 0% 0%,rgba(0,199,190,.15),transparent 65%),
+    radial-gradient(85% 95% at 100% 10%,rgba(123,97,255,.15),transparent 67%),
+    radial-gradient(70% 80% at 20% 100%,rgba(52,199,89,.10),transparent 66%),
+    var(--ios-bg)!important;
+}
+body[data-lan-device=air6].card-header-pro #smsListContainer .sms-row { border-color:rgba(111,152,255,.22)!important; }
+body[data-lan-device=air6].card-header-pro #smsChatInputBar {
+  background:rgba(246,247,249,.84)!important;
+  border-top-color:rgba(60,60,67,.10)!important;
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+html[data-theme=dark] body[data-lan-device=air6].card-header-pro #smsChatInputBar {
+  background:rgba(27,28,31,.86)!important;
+  border-top-color:rgba(255,255,255,.08)!important;
+}
+
+/* ColorOS/COUI visual adaptation. The dashboard remains WebView-based, so it
+   mirrors COUI tokens without depending on OPPO's private native libraries. */
+html[data-native-ui=coui] body[data-lan-device=air6] { --ios-bg:#f6f7f9; --ios-card-bg:#fff; --ios-primary:#2f6bff; --ios-primary-soft:rgba(47,107,255,.10); --ios-border:rgba(0,0,0,.06); --ios-shadow:0 3px 14px rgba(0,0,0,.045); font-family:"OPPO Sans","OnePlus Sans",Roboto,"Noto Sans SC",sans-serif; letter-spacing:0; }
+html[data-native-ui=coui][data-theme=dark] body[data-lan-device=air6] { --ios-bg:#0f1012; --ios-card-bg:#1b1c1f; --ios-primary:#6f98ff; --ios-primary-soft:rgba(111,152,255,.18); --ios-border:rgba(255,255,255,.08); --ios-shadow:none; }
+html[data-native-ui=coui] body[data-lan-device=air6] .page-title,
+html[data-native-ui=coui] body[data-lan-device=air6] .pt-t,
+html[data-native-ui=coui] body[data-lan-device=air6] .operator-title,
+html[data-native-ui=coui] body[data-lan-device=air6] .aq-val,
+html[data-native-ui=coui] body[data-lan-device=air6] .gauge-val,
+html[data-native-ui=coui] body[data-lan-device=air6] .info-device-name { letter-spacing:0!important; }
+html[data-native-ui=coui] body[data-lan-device=air6] .card,
+html[data-native-ui=coui] body[data-lan-device=air6] .header-card,
+html[data-native-ui=coui] body[data-lan-device=air6] .ios-list { border-radius:16px; box-shadow:var(--ios-shadow); }
+html[data-native-ui=coui] body[data-lan-device=air6] .ios-row { min-height:52px; padding:13px 16px; }
+html[data-native-ui=coui] body[data-lan-device=air6] .row-icon { border-radius:9px; box-shadow:none; }
+html[data-native-ui=coui] body[data-lan-device=air6] .lock-modal-container { border-radius:20px!important; }
+html[data-native-ui=coui] body[data-lan-device=air6] .lock-modal-overlay { background:rgba(0,0,0,.42); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+html[data-native-ui=coui] body[data-lan-device=air6] .sms-view-tabs { border-radius:12px; padding:4px; }
+html[data-native-ui=coui] body[data-lan-device=air6] .sms-view-tabs button { border-radius:9px; }
+html[data-native-ui=coui] body[data-lan-device=air6] #smsChatInputBar { gap:10px!important; padding-top:10px!important; padding-bottom:10px!important; }
+html[data-native-ui=coui] body[data-lan-device=air6] #smsChatInput {
+  min-width:0; min-height:44px; padding:10px 16px!important;
+  border:1px solid rgba(60,60,67,.10)!important; border-radius:999px!important;
+  background:rgba(255,255,255,.78)!important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.025);
+}
+html[data-native-ui=coui][data-theme=dark] body[data-lan-device=air6] #smsChatInput {
+  border-color:rgba(255,255,255,.09)!important;
+  background:rgba(255,255,255,.07)!important;
+}
+html[data-native-ui=coui] body[data-lan-device=air6] #smsChatInputBar > span {
+  width:44px!important; height:44px!important; min-width:44px;
+  flex:0 0 44px!important; aspect-ratio:1; border-radius:50%!important;
+  box-shadow:0 3px 10px rgba(47,107,255,.22);
+}
+html[data-native-ui=coui] body[data-lan-device=air6] #smsListContainer .sms-row,
+html[data-native-ui=coui] body[data-lan-device=air6].has-wallpaper #smsListContainer .sms-row { border-radius:14px!important; box-shadow:none; }
+#air6OtaTabBadge {
+  position:absolute; top:1px; left:calc(50% + 5px); z-index:2;
+  min-width:16px; height:16px; display:none; align-items:center; justify-content:center;
+  padding:0 4px; box-sizing:border-box; border-radius:8px;
+  background:var(--ios-danger); color:#fff; font-size:10px; font-weight:600;
+  box-shadow:0 1px 4px rgba(255,59,48,.35); pointer-events:none;
+}
+.tab-btn[data-page="settings"] { position:relative; }
+
+/* One Air6 rainbow surface system for login, control and secondary dialogs. */
+body[data-lan-device=air6].card-header-pro {
+  --air6-rainbow-panel:
+    radial-gradient(72% 88% at 0% 0%,rgba(0,199,190,.16),transparent 64%),
+    radial-gradient(82% 92% at 100% 4%,rgba(123,97,255,.15),transparent 66%),
+    radial-gradient(68% 76% at 18% 100%,rgba(255,214,10,.12),transparent 66%),
+    linear-gradient(150deg,#fafdff,#eef4fd 58%,#f6f3fd);
+  --air6-rainbow-surface:rgba(255,255,255,.62);
+  --air6-rainbow-border:rgba(126,153,190,.18);
+}
+html[data-theme=dark] body[data-lan-device=air6].card-header-pro {
+  --air6-rainbow-panel:
+    radial-gradient(72% 88% at 0% 0%,rgba(0,199,190,.18),transparent 64%),
+    radial-gradient(82% 92% at 100% 4%,rgba(123,97,255,.18),transparent 66%),
+    radial-gradient(68% 76% at 18% 100%,rgba(255,159,0,.10),transparent 66%),
+    linear-gradient(150deg,#191f24,#1a1d26 58%,#221d27);
+  --air6-rainbow-surface:rgba(255,255,255,.07);
+  --air6-rainbow-border:rgba(255,255,255,.10);
+}
+body[data-lan-device=air6].card-header-pro .lock-modal-container,
+body[data-lan-device=air6].card-header-pro .lock-dialog-box,
+body[data-lan-device=air6].card-header-pro #clientsModalContainer,
+body[data-lan-device=air6].card-header-pro #offlineConfirmContainer,
+body[data-lan-device=air6].card-header-pro #rebootConfirmContainer,
+body[data-lan-device=air6].card-header-pro #csSheetCard,
+body[data-lan-device=air6].card-header-pro #devSwitchCard,
+body[data-lan-device=air6].card-header-pro #rebootModalContainer,
+body[data-lan-device=air6].card-header-pro #fanPickerContainer,
+body[data-lan-device=air6].card-header-pro #netSettingContainer,
+body[data-lan-device=air6].card-header-pro #smsComposeOverlay>div,
+body[data-lan-device=air6].card-header-pro #arSheetCard {
+  background:var(--air6-rainbow-panel)!important;
+  border:1px solid var(--air6-rainbow-border)!important;
+  box-shadow:0 18px 48px rgba(30,53,80,.18)!important;
+}
+body[data-lan-device=air6].card-header-pro .lock-modal-overlay input:not([type=checkbox]):not([type=radio]),
+body[data-lan-device=air6].card-header-pro .lock-modal-overlay select,
+body[data-lan-device=air6].card-header-pro .lock-modal-overlay textarea,
+body[data-lan-device=air6].card-header-pro .lock-dialog-overlay input:not([type=checkbox]):not([type=radio]),
+body[data-lan-device=air6].card-header-pro .lock-dialog-overlay select,
+body[data-lan-device=air6].card-header-pro .lock-dialog-overlay textarea {
+  background:var(--air6-rainbow-surface)!important;
+  border-color:var(--air6-rainbow-border)!important;
+}
+body[data-lan-device=air6].card-header-pro #air6Control .air6-modal-head,
+body[data-lan-device=air6].card-header-pro #air6Control .air6-modal-foot {
+  border-color:var(--air6-rainbow-border);
+}
+body[data-lan-device=air6].card-header-pro #air6Control .air6-modal-content section {
+  padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--air6-rainbow-border);
+}
+body[data-lan-device=air6].card-header-pro #air6Control .air6-card,
+body[data-lan-device=air6].card-header-pro #air6Control .air6-cell-row,
+body[data-lan-device=air6].card-header-pro #air6Control details {
+  background:var(--air6-rainbow-surface)!important;
+  border-color:var(--air6-rainbow-border)!important;
+}
+body[data-lan-device=air6].card-header-pro #air6Control button:not(.air6-primary):not(.selected),
+body[data-lan-device=air6].card-header-pro #localLoginModal button:not(.ac-btn-primary) {
+  background:var(--air6-rainbow-surface)!important;
+}
+/* The entire row is the touch target; keep the visual chevron compact so
+   long values retain usable width on narrow phones. */
+body[data-lan-device=air6] .ios-row .row-right { gap:2px; min-width:0; }
+body[data-lan-device=air6] #page-control .ios-row,
+body[data-lan-device=air6] #page-settings .ios-row { padding-right:10px!important; }
+body[data-lan-device=air6] .ios-row .row-right>.chevron {
+  width:16px; height:16px; margin:0; flex:0 0 16px;
+}
+body[data-lan-device=air6] .ios-row .row-right>.row-chevron { margin:0; flex:none; }
+body[data-lan-device=air6] #page-control #netSettingRow .row-right { gap:2px; }
+#smsLocalSearch { display:none; flex:none; box-sizing:border-box; margin:0 16px 8px; width:calc(100% - 32px); min-height:38px; border:1px solid var(--ios-border); border-radius:10px; padding:8px 12px; background:var(--ios-card-bg); color:var(--ios-text); font-size:13px; }
+body[data-lan-device=air6] #smsLocalSearch { display:block; }
+.air6-task-editor { border-top:1px solid var(--ios-border); margin-top:12px; padding-top:6px; }
+.air6-task-editor h3 { font-size:16px; margin:12px 0; }
+#air6Control .air6-automation-check { display:flex; align-items:center; gap:9px; }
+#air6Control .air6-automation-check input { width:20px; height:20px; min-height:20px; margin:0; flex:none; accent-color:var(--ios-primary); }
+.air6-task-days,.air6-task-bands { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 14px; }
+#air6Control .air6-task-days label,#air6Control .air6-task-bands label { display:flex; align-items:center; gap:5px; margin:0; padding:6px 8px; border:1px solid var(--ios-border); border-radius:8px; }
+#air6Control .air6-task-days input,#air6Control .air6-task-bands input { width:17px; height:17px; min-height:17px; margin:0; accent-color:var(--ios-primary); }
+.air6-task-error { color:var(--ios-danger); font-size:13px; line-height:1.5; }
+#air6TaskList .air6-card strong { display:block; margin-bottom:6px; overflow-wrap:anywhere; }
+#air6TaskPreview { min-height:20px; }
+body[data-lan-device=air6].card-header-pro .hc-op { flex:0 1 auto; max-width:calc(100% - 76px); overflow:hidden; text-overflow:ellipsis; }
+body[data-lan-device=air6].card-header-pro .hc-prow-spacer { display:block; flex:1 1 auto; min-width:4px; }
+body[data-lan-device=air6].card-header-pro #hcTemp2, body[data-lan-device=air6].card-header-pro #hcBars { flex-shrink:0; }
+
+body[data-lan-device=air6].card-header-pro #hcTemp2 svg { width:20px; height:20px; }
+body[data-lan-device=air6].card-header-pro #hcBars { gap:1.5px; }
+body[data-lan-device=air6].card-header-pro #hcBars i { width:3.5px; }
+body[data-lan-device=air6].card-header-pro #hcBars i:nth-child(1) { height:6px!important; }
+body[data-lan-device=air6].card-header-pro #hcBars i:nth-child(2) { height:9px!important; }
+body[data-lan-device=air6].card-header-pro #hcBars i:nth-child(3) { height:12px!important; }
+body[data-lan-device=air6].card-header-pro #hcBars i:nth-child(4) { height:16px!important; }
+@media(max-width:360px) { body[data-lan-device=air6].card-header-pro #hcTemp2 svg { width:16px; height:16px; } body[data-lan-device=air6].card-header-pro #hcTempTxt2 { font-size:11px!important; } }

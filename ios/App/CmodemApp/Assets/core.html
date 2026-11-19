@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><title>FHCpeBoard LAN Core</title></head><body>
+<script>
+'use strict';
+let sequence = 0;
+const pending = new Map();
+function nativeCall(kind, invoke, timeout) {
+  const id = kind + (++sequence);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { pending.delete(id); reject(Error('设备请求超时')); }, timeout || 60000);
+    pending.set(id, {resolve:v=>{clearTimeout(timer);resolve(v);}, reject:e=>{clearTimeout(timer);reject(e);}});
+    try { invoke(id); } catch(e) { clearTimeout(timer); pending.delete(id); reject(e); }
+  });
+}
+window.__fetchDoneFile = (id,status,path) => {
+  const rec=pending.get(id); if(!rec){AndroidCore.fileRemove(path);return;} pending.delete(id);
+  try{rec.resolve({status,text:AndroidCore.fileRead(path)});}catch(e){rec.reject(e);}finally{AndroidCore.fileRemove(path);}
+};
+window.__fetchText = (id,status,text) => {const r=pending.get(id);if(r){pending.delete(id);r.resolve({status,text});}};
+window.__fetchDone = raw => {const p=JSON.parse(raw),r=pending.get(p.id);if(r){pending.delete(p.id);r.resolve(p);}};
+window.__nativeDone = raw => {const p=JSON.parse(raw),r=pending.get(p.id);if(r){pending.delete(p.id);r.resolve(p.result);}};
+// Native transport failures arrive as status 0 with a reason in the body.
+const transportFailures={DNS_FAILED:'域名无法解析，或解析结果不是可用的设备地址',TLS_CERT_FAILED:'HTTPS 证书无效或与域名不符，已拒绝连接',TLS_FAILED:'HTTPS 连接失败',DEVICE_ADDRESS_REJECTED:'设备地址不被允许',LOCAL_NETWORK_PERMISSION_DENIED:'本地网络权限未开启，请在系统设置中允许后重试'};
+window.__nfetch = async (url,options) => {
+  let r;try{r=await nativeCall('f',id=>AndroidCore.fetch(id,url,JSON.stringify(options||{})));}
+  catch(e){e.code='NETWORK';throw e;}
+  const reason=(r.status===0||r.status===403)&&transportFailures[r.text];
+  if(reason)throw Object.assign(Error(reason),{code:'NETWORK'});
+  if([502,503,504,520,521,522,523,524,525,526,530].includes(r.status))throw Object.assign(Error('隧道或代理暂时不可用（HTTP '+r.status+'），稍后自动重试'),{code:'NETWORK'});
+  return {status:r.status,ok:r.status>=200&&r.status<300,text:async()=>r.text};
+};
+window.__nevalJS = async js => {
+  const code=/^\s*return\b/.test(js)?'(function(){'+js+'})()':js;
+  const result=await nativeCall('e',id=>AndroidCore.evalJS(id,code));
+  try{return JSON.parse(result);}catch(_){return result;}
+};
+window.__nloadHTML = html => nativeCall('h',id=>AndroidCore.loadHTML(id,html));
+</script>
+<script src="network_mode.js"></script><script src="device_address.js"></script><script src="upstream_local.js"></script><script src="air6_api.js"></script><script src="lan_api.js"></script><script src="lan_runtime.js"></script>
+</body></html>
