@@ -88,7 +88,7 @@ private final class CoreBridge: NSObject, AndroidCoreJS {
     }
 
     func decodeSmsPdu(_ pdu: String) -> String { SmsPdu.decodeJSON(pdu) }
-    func reseed() -> String { HostCoordinator.shared.clearCaches(); return "ok" }
+    func reseed() -> String { _ = HostCoordinator.shared.clearCaches(); return "ok" }
 }
 
 // MARK: - timer shims (JSContext has no event loop)
@@ -109,7 +109,7 @@ private final class TimerBridge: NSObject, TimerJS {
         next += 1
         let id = next
         callbacks[id] = fn
-        let timer = Timer(timeInterval: max(0.001, Double(ms) / 1000.0), repeats: repeats) { [weak self] in
+        let timer = Timer(timeInterval: max(0.001, Double(ms) / 1000.0), repeats: repeats) { [weak self] _ in
             guard let self, let fn = self.callbacks[id] else { return }
             fn.call(withArguments: [])
             if !repeats {
@@ -148,8 +148,8 @@ final class CoreRuntime {
         context.exceptionHandler = { _, value in
             print("[CmodemCore] JS exception: \(value?.toString() ?? "unknown")")
         }
-        context.setObject(bridge, forKeyedSubscript: "AndroidCore" as NSCopying)
-        context.setObject(timers, forKeyedSubscript: "__timers" as NSCopying)
+        context.setObject(bridge, forKeyedSubscript: "AndroidCore" as NSString)
+        context.setObject(timers, forKeyedSubscript: "__timers" as NSString)
         evaluate("""
         var window = globalThis;
         var console = {

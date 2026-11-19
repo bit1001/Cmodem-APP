@@ -1,7 +1,6 @@
 import SwiftUI
 import UIKit
 import WebKit
-import PhotosUI
 
 struct BoardView: UIViewRepresentable {
     @EnvironmentObject var host: HostCoordinator
@@ -38,7 +37,6 @@ struct BoardView: UIViewRepresentable {
 final class BoardCoordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     weak var host: HostCoordinator?
     weak var web: WKWebView?
-    private var photoCoordinator: PhotoPickerCoordinator?
 
     init(host: HostCoordinator) { self.host = host }
 
@@ -98,39 +96,5 @@ final class BoardCoordinator: NSObject, WKScriptMessageHandler, WKNavigationDele
         if let controller = presented() { controller.present(alert, animated: true) } else { completionHandler(false) }
     }
 
-    // <input type="file" accept="image/*"> is used by lan_ui.js for the
-    // wallpaper picker. WKWebView needs an explicit open panel on iOS.
-    func webView(_ webView: WKWebView, openPanelWithParameters parameters: WKOpenPanelParameters,
-                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
-        var config = PHPickerConfiguration()
-        config.filter = .images
-        config.selectionLimit = 1
-        let picker = PHPickerViewController(configuration: config)
-        let delegate = PhotoPickerCoordinator(completion: completionHandler)
-        picker.delegate = delegate
-        photoCoordinator = delegate
-        if let controller = presented() { controller.present(picker, animated: true) } else { completionHandler(nil) }
-    }
-}
 
-final class PhotoPickerCoordinator: NSObject, PHPickerViewControllerDelegate {
-    private let completion: ([URL]?) -> Void
-
-    init(completion: @escaping ([URL]?) -> Void) { self.completion = completion }
-
-    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        picker.dismiss(animated: true)
-        guard let provider = results.first?.itemProvider else {
-            completion(nil); return
-        }
-        provider.loadDataRepresentation(forTypeIdentifier: "public.image") { [weak self] data, _ in
-            var urls: [URL]?
-            if let data {
-                let url = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("wallpaper-\(UUID().uuidString).jpg")
-                if (try? data.write(to: url)) != nil { urls = [url] }
-            }
-            DispatchQueue.main.async { self?.completion(urls) }
-        }
-    }
 }
